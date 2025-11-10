@@ -87,7 +87,7 @@ void loop() {
     Serial.println("Falha ao obter hora");
     display.clearDisplay();
     display.setTextSize(1);
-    display.setTextColor(SSD1306_WHITE);
+    display.setTextColor(SSD1306_WHITE); // <-- CORRIGIDO AQUI
     display.setCursor(0,0);
     display.println("Erro ao ler hora!");
     display.display();
@@ -95,32 +95,45 @@ void loop() {
     return; // Tenta de novo no próximo loop
   }
 
-  // 2. Formata a string da hora (HH:MM:SS)
-  char timeString[10]; 
+  // 2. Formata as strings de HORA e DATA
+  char timeString[10]; // Buffer para "HH:MM:SS\0"
   sprintf(timeString, "%02d:%02d:%02d", 
           timeinfo.tm_hour, 
           timeinfo.tm_min, 
           timeinfo.tm_sec);
+          
+  char dateString[6]; // Buffer para "DD/MM\0"
+  sprintf(dateString, "%02d/%02d",
+          timeinfo.tm_mday,
+          timeinfo.tm_mon + 1); // +1 porque os meses são de 0-11
 
-  // 3. Limpa o display e prepara para desenhar
+  // 3. Limpa o display
   display.clearDisplay();
+  display.setTextColor(SSD1306_WHITE); // Já estava correto aqui
+
+  // 4. Desenha a HORA (Tamanho 2, Centralizada)
+  display.setTextSize(2);
+  int16_t x1_time, y1_time;
+  uint16_t w_time, h_time;
+  display.getTextBounds(timeString, 0, 0, &x1_time, &y1_time, &w_time, &h_time);
+  int x_pos_time = (SCREEN_WIDTH - w_time) / 2;
+  int y_pos_time = 18; // Posição Y (mais para cima)
   
-  // 4. Define a fonte e a cor
-  display.setTextSize(2); // <-- MUDADO! (Tamanho 2 agora)
-  display.setTextColor(SSD1306_WHITE);
-
-  // 5. Lógica para centralizar o texto
-  int16_t x1, y1;
-  uint16_t w, h;
-  display.getTextBounds(timeString, 0, 0, &x1, &y1, &w, &h);
-  int x_pos = (SCREEN_WIDTH - w) / 2;
-  int y_pos = (SCREEN_HEIGHT - h) / 2;
-
-  // 6. Define o cursor e imprime a hora
-  display.setCursor(x_pos, y_pos);
+  display.setCursor(x_pos_time, y_pos_time);
   display.print(timeString);
 
-  // 7. Envia para o display
+  // 5. Desenha a DATA (Tamanho 1, Centralizada)
+  display.setTextSize(1);
+  int16_t x1_date, y1_date;
+  uint16_t w_date, h_date;
+  display.getTextBounds(dateString, 0, 0, &x1_date, &y1_date, &w_date, &h_date);
+  int x_pos_date = (SCREEN_WIDTH - w_date) / 2;
+  int y_pos_date = 40; // Posição Y (abaixo da hora)
+
+  display.setCursor(x_pos_date, y_pos_date);
+  display.print(dateString);
+
+  // 7. Envia tudo para o display
   display.display();
   
   delay(1000); // Atualiza a cada 1 segundo
